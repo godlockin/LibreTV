@@ -744,12 +744,6 @@ async function search() {
             }
         });
         
-        // 更新搜索结果计数
-        const searchResultsCount = document.getElementById('searchResultsCount');
-        if (searchResultsCount) {
-            searchResultsCount.textContent = allResults.length;
-        }
-        
         // 显示结果区域，调整搜索区域
         document.getElementById('searchArea').classList.remove('flex-1');
         document.getElementById('searchArea').classList.add('mb-8');
@@ -762,8 +756,9 @@ async function search() {
         }
         
         const resultsDiv = document.getElementById('results');
+        const searchResultsCount = document.getElementById('searchResultsCount'); // 将声明移到此处，方便后续更新
         
-        // 如果没有结果
+        // 如果原始结果为空 (在过滤和截断之前)
         if (!allResults || allResults.length === 0) {
             resultsDiv.innerHTML = `
                 <div class="col-span-full text-center py-16">
@@ -797,17 +792,42 @@ async function search() {
         }
 
         // 处理搜索结果过滤：如果启用了黄色内容过滤，则过滤掉分类含有敏感内容的项目
+        let filteredResults = allResults;
         const yellowFilterEnabled = localStorage.getItem('yellowFilterEnabled') === 'true';
         if (yellowFilterEnabled) {
             const banned = ['伦理片','福利','里番动漫','门事件','萝莉少女','制服诱惑','国产传媒','cosplay','黑丝诱惑','无码','日本无码','有码','日本有码','SWAG','网红主播', '色情片','同性片','福利视频','福利片'];
-            allResults = allResults.filter(item => {
+            filteredResults = allResults.filter(item => {
                 const typeName = item.type_name || '';
                 return !banned.some(keyword => typeName.includes(keyword));
             });
         }
 
+        // 更新搜索结果计数为过滤后的数量
+        if (searchResultsCount) {
+            searchResultsCount.textContent = filteredResults.length;
+        }
+
+        // 如果过滤后没有结果
+        if (!filteredResults || filteredResults.length === 0) {
+            resultsDiv.innerHTML = `
+                <div class="col-span-full text-center py-16">
+                    <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="mt-2 text-lg font-medium text-gray-400">没有找到匹配的结果</h3>
+                    <p class="mt-1 text-sm text-gray-500">请尝试其他关键词或更换数据源 (或调整过滤设置)</p>
+                </div>
+            `;
+            hideLoading();
+            return;
+        }
+        
+        // 不再截断结果，显示所有过滤后的结果
+        const finalDisplayResults = filteredResults;
+
         // 添加XSS保护，使用textContent和属性转义
-        const safeResults = allResults.map(item => {
+        const safeResults = finalDisplayResults.map(item => {
             const safeId = item.vod_id ? item.vod_id.toString().replace(/[^\w-]/g, '') : '';
             const safeName = (item.vod_name || '').toString()
                 .replace(/</g, '&lt;')
