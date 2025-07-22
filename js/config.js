@@ -40,7 +40,7 @@ const API_SITES = {
         name: '天涯资源',
     },
     xiaomaomi: {
-        api: 'https://zy.xiaomaomi.cc',
+        api: 'https://zy.xmm.hk/api.php/provide/vod',
         name: '小猫咪资源',
     },
     ffzy: {
@@ -109,6 +109,10 @@ const API_SITES = {
     ikun: {
         api: 'https://ikunzyapi.com/api.php/provide/vod',
         name: 'iKun资源'
+    },
+    lzi: {
+        api: 'https://cj.lziapi.com/api.php/provide/vod/',
+        name: '量子资源站'
     },
     testSource: {
         api: 'https://www.example.com/api.php/provide/vod',
