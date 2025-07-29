@@ -40,14 +40,66 @@ const API_SITES = {
         name: '天涯资源',
     },
     xiaomaomi: {
-        api: 'https://zy.xmm.hk/api.php/provide/vod',
+        api: 'http://zy.xmm.hk/api.php/provide/vod/?ac=list',
         name: '小猫咪资源',
     },
-    ffzy: {
-        api: 'http://ffzy5.tv/api.php/provide/vod',
-        name: '非凡影视',
-        detail: 'http://ffzy5.tv', 
+    tengxun: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/qq',
+        name: '腾讯视频资源',
     },
+    qiyi: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/qiyi',
+        name: '奇艺视频资源',
+    },
+    youku: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/youku',
+        name: '优酷视频资源',
+    },
+    mgtv: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/mgtv',
+        name: '芒果视频资源',
+    },
+    pptv: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/pptv',
+        name: 'PPTV视频资源',
+    },
+    sohu: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/sohu',
+        name: '搜狐视频资源',
+    },
+    letv: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/letv',
+        name: '乐视视频资源',
+    },
+    xigua: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/xigua',
+        name: '西瓜视频资源',
+    },
+    bilibili: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/bilibili',
+        name: 'B站视频资源',
+    },
+    m1905: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/m1905',
+        name: '1905电影资源',
+    },
+    migu: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/migu',
+        name: '咪咕视频资源',
+    },
+    funshion: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/funshion',
+        name: '风行视频资源',
+    },
+    wasu: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/wasu',
+        name: '华数TV资源',
+    },
+    xmm: {
+        api: 'http://zy.xmm.hk/api.php/provide/vod/from/xmm',
+        name: '小猫咪独立资源',
+    },
+
     heimuer: {
         api: 'https://json.heimuer.xyz/api.php/provide/vod',
         name: '黑木耳',
@@ -57,18 +109,12 @@ const API_SITES = {
         api: 'https://360zy.com/api.php/provide/vod',
         name: '360资源',
     },
-    iqiyi: {
-        api: 'https://www.iqiyizyapi.com/api.php/provide/vod',
-        name: 'iqiyi资源',
-    },
+
     wolong: {
         api: 'https://wolongzyw.com/api.php/provide/vod',
         name: '卧龙资源',
     }, 
-    hwba: {
-        api: 'https://cjhwba.com/api.php/provide/vod',
-        name: '华为吧资源',
-    },
+
     jisu: {
         api: 'https://jszyapi.com/api.php/provide/vod',
         name: '极速资源',
@@ -90,10 +136,7 @@ const API_SITES = {
         api: 'https://api.zuidapi.com/api.php/provide/vod',
         name: '最大资源'
     },
-    yinghua: {
-        api: 'https://m3u8.apiyhzy.com/api.php/provide/vod',
-        name: '樱花资源'
-    },
+
     baidu: {
         api: 'https://api.apibdzy.com/api.php/provide/vod',
         name: '百度云资源'
@@ -123,36 +166,36 @@ const API_SITES = {
     // 而作为观众无辜吗？毫无疑问，他们促成了黄色产业链的再生产。
     // 我们提供此警告，是希望您能认清这些内容的本质——它们是压迫和奴役的工具，而非娱乐。
     ckzy: {
-        api: 'https://www.ckzy1.com',
+        api: 'https://ckzy.me/api.php/provide/vod',
         name: 'CK资源'
     },
     jkun: {
-        api: 'https://jkunzyapi.com',
+        api: 'https://jkunzyapi.com/api.php/provide/vod',
         name: 'jkun资源'
     },
     bwzy: {
-        api: 'https://api.bwzym3u8.com',
+        api: 'https://api.bwzyz.com/api.php/provide/vod',
         name: '百万资源'
     },
     souav: {
-        api: 'https://api.souavzy.vip',
+        api: 'https://api.souavzy.vip/api.php/provide/vod',
         name: 'souav资源'
     },
     r155: {
-        api: 'https://155api.com',
+        api: 'https://155api.com/api.php/provide/vod',
         name: '155资源'
     },
     lsb: {
-        api: 'https://apilsbzy1.com',
+        api: 'https://apilsbzy1.com/api.php/provide/vod',
         name: 'lsb资源'
     },
     huangcang: {
-        api: 'https://hsckzy.vip',
+        api: 'https://hsckzy888.com',
         name: '黄色仓库',
-        detail: 'https://hsckzy.vip'
+        detail: 'https://hsckzy888.com'
     },
     yutu: {
-        api: 'https://yutuzy10.com',
+        api: 'https://apiyutu.com/api.php/providedao/vod/?ac=list',
         name: '玉兔资源'
     },
 };
