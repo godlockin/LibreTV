@@ -198,6 +198,111 @@ const API_SITES = {
         api: 'https://apiyutu.com/api.php/providedao/vod/?ac=list',
         name: '玉兔资源'
     },
+    
+    // 新增的API站点（来自用户配置）
+    ffzy: {
+        api: 'http://ffzy5.tv/api.php/provide/vod',
+        name: '非凡影视',
+        detail: 'http://ffzy5.tv'
+    },
+    maotaizy: {
+        api: 'https://caiji.maotaizy.cc/api.php/provide/vod',
+        name: '茅台资源'
+    },
+    yinghua: {
+        api: 'https://m3u8.apiyhzy.com/api.php/provide/vod',
+        name: '樱花资源'
+    },
+    
+    // 点播站点
+    huaweibavod: {
+        api: 'https://hw8.live/api.php/provide/vod/',
+        name: '华为吧|点播'
+    },
+    fujuvod: {
+        api: 'http://www.fuju2024.cc:8013/ruifenglb_api.php/provide/vod/',
+        name: '腐剧|点播'
+    },
+    jinyingvod: {
+        api: 'https://jinyingzy.com/api.php/provide/vod/',
+        name: '金鹰|点播'
+    },
+    okvod: {
+        api: 'https://okzyw9.com/api.php/provide/vod/',
+        name: 'OK|点播'
+    },
+    baopianvod: {
+        api: 'https://zpsps.com/api.php/provide/vod/',
+        name: '宝片|点播'
+    },
+    xiaohuangrenvod: {
+        api: 'https://iqyi.xiaohuangrentv.com/api.php/provide/vod/',
+        name: '小黄人|点播'
+    },
+    niuniuvod: {
+        api: 'https://api.niuniuzy.me/api.php/provide/vod/',
+        name: '牛牛|点播'
+    },
+    yayavod: {
+        api: 'https://cj.yayazy.net/api.php/provide/vod/',
+        name: '丫丫|点播'
+    },
+    yingtuvod: {
+        api: 'https://cj.vodimg.top/api.php/provide/vod/',
+        name: '影图|点播'
+    },
+    ukuvod: {
+        api: 'https://api.ukuapi.com/api.php/provide/vod/',
+        name: 'U酷|点播'
+    },
+    haohuavod: {
+        api: 'https://hhzyapi.com/api.php/provide/vod',
+        name: '豪华|点播'
+    },
+    suonivod: {
+        api: 'https://suoniapi.com/api.php/provide/vod/',
+        name: '索尼|点播'
+    },
+    baofengvod: {
+        api: 'https://bfzyapi.com/api.php/provide/vod/',
+        name: '暴风|点播'
+    },
+    hongniuvod: {
+        api: 'https://www.hongniuzy2.com/api.php/provide/vod/',
+        name: '红牛|点播'
+    },
+    kuaichevod: {
+        api: 'https://caiji.kczyapi.com/api.php/provide/vod/from/kcm3u8/',
+        name: '快车|点播'
+    },
+    shandianvod: {
+        api: 'http://sdzyapi.com/api.php/provide/vod/',
+        name: '闪电|点播'
+    },
+    wolongvod: {
+        api: 'https://collect.wolongzyw.com/api.php/provide/vod/',
+        name: '卧龙|点播'
+    },
+    huyavod: {
+        api: 'https://www.huyaapi.com/api.php/provide/vod/',
+        name: '虎牙|点播'
+    },
+    piaolingvod: {
+        api: 'https://p2100.net/api.php/provide/vod/',
+        name: '飘零|点播'
+    },
+    subovod: {
+        api: 'https://subocaiji.com/api.php/provide/vod/',
+        name: '速博|点播'
+    },
+    moduvod: {
+        api: 'https://caiji.moduapi.cc/api.php/provide/vod/',
+        name: '魔都|点播'
+    },
+    zuidadianbo: {
+        api: 'http://zuidazy.me/api.php/provide/vod/',
+        name: '最大|点播'
+    }
 };
 
 // 定义合并方法
