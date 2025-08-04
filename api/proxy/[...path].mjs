@@ -2,6 +2,7 @@
 
 import fetch from 'node-fetch';
 import { URL } from 'url'; // 使用 Node.js 内置 URL 处理
+import crypto from 'crypto'; // 导入 crypto 模块用于密码哈希
 
 // --- 配置 (从环境变量读取) ---
 const DEBUG_ENABLED = process.env.DEBUG === 'true';
@@ -212,62 +213,97 @@ async function processM3u8(m3u8Content, baseUrl, recursionDepth = 0) {
     logDebug(`开始处理 M3U8 (深度 ${recursionDepth}): ${baseUrl}`);
 
     if (recursionDepth > MAX_RECURSION) {
-        logDebug(`M3U8 处理达到最大递归深度 (${MAX_RECURSION})，停止处理: ${baseUrl}`);
-        return m3u8Content; // 返回原始内容以避免无限递归
+        throw new Error(`处理主播放列表时，递归深度超过最大限制 (${MAX_RECURSION}): ${url}`);
     }
+    const baseUrl = getBaseUrl(url);
+    const lines = content.split('\n');
+    let highestBandwidth = -1;
+    let bestVariantUrl = '';
 
-    const lines = m3u8Content.split(/\r?\n/);
-    const processedLines = [];
-    let isVariantPlaylist = false;
-
-    for (const line of lines) {
-        let processedLine = line.trim();
-
-        if (processedLine.startsWith('#EXT-X-STREAM-INF:')) {
-            isVariantPlaylist = true;
-            // 对于主播放列表中的流信息行，也需要处理其 URI (如果存在)
-            // 通常 URI 在下一行，但规范允许在同一行，例如：
-            // #EXT-X-STREAM-INF:BANDWIDTH=1280000,AVERAGE-BANDWIDTH=1000000,URI="stream.m3u8"
-            // 但更常见的是 URI 在下一行，所以我们主要处理下一行
-            processedLines.push(processedLine);
-        } else if (processedLine.startsWith('#EXT-X-KEY:')) {
-            processedLines.push(processKeyLine(processedLine, baseUrl));
-        } else if (processedLine.startsWith('#EXT-X-MAP:')) {
-            processedLines.push(processMapLine(processedLine, baseUrl));
-        } else if (processedLine.startsWith('#EXTINF:') || processedLine.startsWith('#EXT-X-BYTERANGE:')) {
-            // 这些标签后面通常跟着媒体片段的 URL
-            processedLines.push(processedLine);
-        } else if (processedLine && !processedLine.startsWith('#')) {
-            // 这应该是一个 URL (媒体片段或子 M3U8)
-            const segmentUrl = resolveUrl(baseUrl, processedLine);
-            logDebug(`原始片段/子M3U8 URL: '${processedLine}', 解析后: '${segmentUrl}'`);
-
-            // 尝试获取这个 URL 的内容类型，判断是否是嵌套的 M3U8
-            // 但为了避免对每个片段都发起 HEAD 请求，我们先假设它可能是 M3U8
-            // 如果这是一个主播放列表 (isVariantPlaylist 为 true)，那么这行很可能是子 M3U8
-            // 如果这是一个媒体播放列表，那么这行是媒体片段
-            if (isVariantPlaylist || segmentUrl.toLowerCase().endsWith('.m3u8') || segmentUrl.toLowerCase().endsWith('.m3u')) {
-                try {
-                    logDebug(`尝试获取并处理嵌套 M3U8: ${segmentUrl} (来自 ${baseUrl})`);
-                    // 注意：这里不直接发起请求，而是生成代理 URL
-                    // 嵌套的 M3U8 也应该通过代理访问
-                    processedLines.push(rewriteUrlToProxy(segmentUrl));
-                } catch (fetchError) {
-                    logDebug(`获取嵌套 M3U8 失败 (${segmentUrl}): ${fetchError.message}。作为普通片段处理。`);
-                    processedLines.push(rewriteUrlToProxy(segmentUrl)); // 失败则按原样（代理后）加入
-                }
-            } else {
-                // 普通媒体片段，直接重写 URL
-                processedLines.push(rewriteUrlToProxy(segmentUrl));
+    // 查找最高带宽的流
+    for (let i = 0; i < lines.length; i++) {
+        if (lines[i].startsWith('#EXT-X-STREAM-INF')) {
+            const bandwidthMatch = lines[i].match(/BANDWIDTH=(\d+)/);
+            const currentBandwidth = bandwidthMatch ? parseInt(bandwidthMatch[1], 10) : 0;
+            let variantUriLine = '';
+            // 找到下一行的 URI
+            for (let j = i + 1; j < lines.length; j++) {
+                const line = lines[j].trim();
+                if (line && !line.startsWith('#')) { variantUriLine = line; i = j; break; }
             }
-        } else {
-            // 其他 M3U8 标签或空行
-            processedLines.push(processedLine);
+            if (variantUriLine && currentBandwidth >= highestBandwidth) {
+                highestBandwidth = currentBandwidth;
+                bestVariantUrl = resolveUrl(baseUrl, variantUriLine);
+            }
         }
     }
-    return processedLines.join('\n');
+    // 如果没有找到带宽信息，尝试查找第一个 .m3u8 链接
+    if (!bestVariantUrl) {
+        logDebug(`主播放列表中未找到 BANDWIDTH 信息，尝试查找第一个 URI: ${url}`);
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+             // 更可靠地匹配 .m3u8 链接
+            if (line && !line.startsWith('#') && line.match(/\.m3u8($|\?.*)/i)) {
+                bestVariantUrl = resolveUrl(baseUrl, line);
+                logDebug(`备选方案: 找到第一个子播放列表 URI: ${bestVariantUrl}`);
+                break;
+            }
+        }
+    }
+    // 如果仍然没有找到子列表 URL
+    if (!bestVariantUrl) {
+        logDebug(`在主播放列表 ${url} 中未找到有效的子列表 URI，将其作为媒体列表处理。`);
+        return processMediaPlaylist(url, content);
+    }
+
+    logDebug(`选择的子播放列表 (带宽: ${highestBandwidth}): ${bestVariantUrl}`);
+    // 请求选定的子播放列表内容 (注意：这里传递 {} 作为请求头，不传递客户端的原始请求头)
+    const { content: variantContent, contentType: variantContentType } = await fetchContentWithType(bestVariantUrl, {});
+
+    // 检查获取的内容是否是 M3U8
+    if (!isM3u8Content(variantContent, variantContentType)) {
+        logDebug(`获取的子播放列表 ${bestVariantUrl} 不是 M3U8 (类型: ${variantContentType})，将其作为媒体列表处理。`);
+        return processMediaPlaylist(bestVariantUrl, variantContent);
+    }
+
+    // 递归处理获取到的子 M3U8 内容
+    return await processM3u8Content(bestVariantUrl, variantContent, recursionDepth + 1);
 }
 
+/**
+ * 验证代理请求的鉴权
+ */
+async function validateAuth(req) {
+    const authHash = req.query.auth;
+    const timestamp = req.query.t;
+    
+    // 获取服务器端密码哈希
+    const serverPassword = process.env.PASSWORD;
+    if (!serverPassword) {
+        console.error('服务器未设置 PASSWORD 环境变量，代理访问被拒绝');
+        return false;
+    }
+    
+    // 使用 crypto 模块计算 SHA-256 哈希
+    const serverPasswordHash = crypto.createHash('sha256').update(serverPassword).digest('hex');
+    
+    if (!authHash || authHash !== serverPasswordHash) {
+        console.warn('代理请求鉴权失败：密码哈希不匹配');
+        return false;
+    }
+    
+    // 验证时间戳（10分钟有效期）
+    if (timestamp) {
+        const now = Date.now();
+        const maxAge = 10 * 60 * 1000; // 10分钟
+        if (now - parseInt(timestamp) > maxAge) {
+            console.warn('代理请求鉴权失败：时间戳过期');
+            return false;
+        }
+    }
+    
+    return true;
+}
 
 // --- Vercel Serverless Function Handler (ES Module) ---
 export default async function handler(request, response) {
@@ -297,24 +333,66 @@ export default async function handler(request, response) {
         return;
     }
 
-    // 设置通用的 CORS 头
-    response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Date, Server, Transfer-Encoding, X-Powered-By');
+    let targetUrl = null; // 初始化目标 URL
 
-    try {
-        const { content, contentType, responseHeaders } = await fetchContentWithType(targetUrl, request.headers);
+    try { // ---- 开始主处理逻辑的 try 块 ----
 
-        // 传递原始响应头 (部分)
-        // 'content-length', 'content-type', 'date', 'server' 等通常由 fetch 的 Response 对象自动处理或下游服务器设置
-        // 但有些头可能需要手动传递，例如 'content-disposition', 'cache-control' 等
-        // 这里我们选择性地传递一些常见的头
-        const headersToForward = ['content-type', 'cache-control', 'expires', 'last-modified', 'etag', 'content-disposition', 'content-range', 'accept-ranges'];
-        responseHeaders.forEach((value, name) => {
-            if (headersToForward.includes(name.toLowerCase())) {
-                response.setHeader(name, value);
+        // --- 验证鉴权 ---
+        const isAuthorized = await validateAuth(req);
+        if (!isAuthorized) {
+            console.warn('代理请求鉴权失败');
+            res.status(401).json({
+                success: false,
+                error: '代理访问未授权：请检查密码配置或鉴权参数'
+            });
+            return;
+        }
+
+        // --- 提取目标 URL (主要依赖 req.query["...path"]) ---
+        // Vercel 将 :path* 捕获的内容（可能包含斜杠）放入 req.query["...path"] 数组
+        const pathData = req.query["...path"]; // 使用正确的键名
+        let encodedUrlPath = '';
+
+        if (pathData) {
+            if (Array.isArray(pathData)) {
+                encodedUrlPath = pathData.join('/'); // 重新组合
+                console.info(`从 req.query["...path"] (数组) 组合的编码路径: ${encodedUrlPath}`);
+            } else if (typeof pathData === 'string') {
+                encodedUrlPath = pathData; // 也处理 Vercel 可能只返回字符串的情况
+                console.info(`从 req.query["...path"] (字符串) 获取的编码路径: ${encodedUrlPath}`);
+            } else {
+                console.warn(`[代理警告] req.query["...path"] 类型未知: ${typeof pathData}`);
             }
-        });
+        } else {
+            console.warn(`[代理警告] req.query["...path"] 为空或未定义。`);
+            // 备选：尝试从 req.url 提取（如果需要）
+            if (req.url && req.url.startsWith('/proxy/')) {
+                encodedUrlPath = req.url.substring('/proxy/'.length);
+                console.info(`使用备选方法从 req.url 提取的编码路径: ${encodedUrlPath}`);
+            }
+        }
 
+        // 如果仍然为空，则无法继续
+        if (!encodedUrlPath) {
+             throw new Error("无法从请求中确定编码后的目标路径。");
+        }
+
+        // 解析目标 URL
+        targetUrl = getTargetUrlFromPath(encodedUrlPath);
+        console.info(`解析出的目标 URL: ${targetUrl || 'null'}`); // 记录解析结果
+
+        // 检查目标 URL 是否有效
+        if (!targetUrl) {
+            // 抛出包含更多上下文的错误
+            throw new Error(`无效的代理请求路径。无法从组合路径 "${encodedUrlPath}" 中提取有效的目标 URL。`);
+        }
+
+        console.info(`开始处理目标 URL 的代理请求: ${targetUrl}`);
+
+        // --- 获取并处理目标内容 ---
+        const { content, contentType, responseHeaders } = await fetchContentWithType(targetUrl, req.headers);
+
+        // --- 如果是 M3U8，处理并返回 ---
         if (isM3u8Content(content, contentType)) {
             logDebug(`检测到 M3U8 内容，开始处理: ${targetUrl}`);
             const baseUrlForM3u8 = getBaseUrl(targetUrl);
