@@ -303,6 +303,76 @@ const API_SITES = {
         api: 'http://zuidazy.me/api.php/provide/vod/',
         name: '最大|点播'
     }
+    ,
+    // 以下为补充以与 Untitled-1 对齐的采集源
+    iqiyi: {
+        api: 'https://www.iqiyizyapi.com/api.php/provide/vod',
+        name: 'iqiyi资源'
+    },
+    hwba: {
+        api: 'https://cjhwba.com/api.php/provide/vod',
+        name: '华为吧资源'
+    },
+    subo: {
+        api: 'https://subocaiji.com/api.php/provide/vod',
+        name: '速播资源'
+    },
+    fczy: {
+        api: 'https://api.fczy888.me/api.php/provide/vod',
+        name: '蜂巢资源'
+    },
+    lebo: {
+        api: 'https://lbapi9.com/api.php/provide/vod',
+        name: 'AV-乐播资源',
+        adult: true
+    },
+    semao: {
+        api: 'https://api.sexnguon.com/api.php/provide/vod',
+        name: 'AV-色猫资源',
+        adult: true
+    },
+    naixiang: {
+        api: 'https://naixxzy.com/api.php/provide/vod',
+        name: 'AV-奶香香',
+        adult: true
+    },
+    aosika: {
+        api: 'https://aosikazy.com/api.php/provide/vod',
+        name: '奥斯卡资源'
+    },
+    aiduanju: {
+        api: 'https://www.aiduanju.cc/api.php/provide/vod',
+        name: '爱短剧.cc'
+    },
+    xingba: {
+        api: 'https://xingba111.com/api.php/provide/vod',
+        name: '杏吧资源'
+    },
+    shayu: {
+        api: 'https://shayuapi.com/api.php/provide/vod',
+        name: 'AV-鲨鱼资源',
+        adult: true
+    },
+    baipiao: {
+        api: 'https://www.kxgav.com/api.php/provide/vod',
+        name: 'AV-白嫖资源',
+        adult: true
+    },
+    fanhao: {
+        api: 'http://fhapi9.com/api.php/provide/vod',
+        name: 'AV-番号资源',
+        adult: true
+    },
+    huangav: {
+        api: 'https://www.pgxdy.com/api.php/provide/vod',
+        name: 'AV-黄AV资源',
+        adult: true
+    },
+    senanguo: {
+        api: 'https://api.sexnguon.com/api.php/provide/vod',
+        name: 'AV-色南国',
+        adult: true
+    }
 };
 
 // 定义合并方法
